@@ -1,0 +1,92 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homa Healthcare - Payment</title>
+    <style>
+        body { font-family: Arial; padding: 20px; max-width: 500px; margin: 0 auto; }
+        .form-group { margin: 15px 0; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; }
+        button { width: 100%; padding: 15px; background: #4CAF50; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; margin: 10px 0; }
+        .payment-info { background: #f0f8ff; padding: 20px; border-radius: 5px; margin: 20px 0; text-align: center; }
+        .hidden { display: none; }
+        .message { padding: 15px; border-radius: 5px; margin: 15px 0; text-align: center; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>🏥 Homa Healthcare Payment</h1>
+
+    <form id="paymentForm">
+        <div class="form-group">
+            <label>Patient Name *</label>
+            <input type="text" id="customerName" required>
+        </div>
+        <div class="form-group">
+            <label>Phone Number *</label>
+            <input type="tel" id="phoneNumber" required maxlength="10">
+        </div>
+        <div class="form-group">
+            <label>Amount Paid (₹) *</label>
+            <input type="number" id="amount" required min="1">
+        </div>
+        <button type="submit">Generate Payment Link</button>
+    </form>
+
+    <div id="paymentSection" class="hidden">
+        <div class="payment-info">
+            <h3>💳 Payment Details</h3>
+            <p>Patient: <span id="displayName"></span></p>
+            <p>Amount: ₹<span id="displayAmount"></span></p>
+            <a href="#" id="upiLink" style="background: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">📱 Pay with UPI</a>
+            <br><br>
+            <button type="button" id="confirmBtn">✅ I have paid</button>
+        </div>
+    </div>
+
+    <div id="statusMessage"></div>
+
+    <script>
+        let currentSessionId = null;
+        
+        document.getElementById('paymentForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const customerName = document.getElementById('customerName').value;
+            const phoneNumber = document.getElementById('phoneNumber').value;
+            const amount = document.getElementById('amount').value;
+            
+            const response = await fetch('/generate-payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ customerName, phoneNumber, amount })
+            });
+            
+            const result = await response.json();
+            if (result.success) {
+                currentSessionId = result.sessionId;
+                document.getElementById('displayName').textContent = customerName;
+                document.getElementById('displayAmount').textContent = amount;
+                document.getElementById('upiLink').href = result.upiLink;
+                document.getElementById('paymentSection').classList.remove('hidden');
+                this.style.display = 'none';
+            }
+        });
+        
+        document.getElementById('confirmBtn').addEventListener('click', async function() {
+            const response = await fetch('/confirm-payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sessionId: currentSessionId })
+            });
+            
+            const result = await response.json();
+            if (result.success) {
+                document.getElementById('statusMessage').innerHTML = '<div class="message success">✅ Payment confirmed!</div>';
+            }
+        });
+    </script>
+</body>
+</html>
