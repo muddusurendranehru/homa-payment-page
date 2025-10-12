@@ -38,12 +38,12 @@ const generateUPILink = (params) => {
 };
 
 /**
- * Send payment SMS notification (Twilio removed - implement your own SMS service)
+ * Send payment SMS notification (SMS service disabled)
  * @param {string} phoneNumber - Recipient phone number
  * @param {Object} paymentData - Payment information
  */
 const sendPaymentSMS = async (phoneNumber, paymentData) => {
-    console.log('📱 SMS notification disabled - Twilio removed from project');
+    console.log('📱 SMS notification disabled');
     console.log(`Would send SMS to ${phoneNumber}:`, paymentData);
     return;
 };
@@ -175,7 +175,7 @@ const formatAmount = (amount) => {
 
 module.exports = {
     generateUPILink,
-    sendPaymentSMS, // Disabled - Twilio removed
+    sendPaymentSMS, // Disabled
     sendPaymentEmail,
     sendTelegramNotification,
     isValidUPIId,
