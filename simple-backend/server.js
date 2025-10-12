@@ -4,6 +4,7 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { Pool } = require('pg');
+const QRCode = require('qrcode');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -186,6 +187,148 @@ app.get('/health', (req, res) => {
 });
 
 // ================================
+// UPI PAYMENT WITH QR CODE
+// ================================
+
+const UPI_ID = '99637219992@ybl';
+const MERCHANT_NAME = 'Homa Healthcare';
+
+// Generate unique payment ID
+function generatePaymentId() {
+  return 'PMT' + Date.now() + Math.floor(Math.random() * 1000);
+}
+
+// Create UPI payment with QR code
+app.post('/api/create-upi-payment', auth, async (req, res) => {
+  try {
+    const { amount, description } = req.body;
+
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ error: 'Valid amount required' });
+    }
+
+    // Generate unique payment ID
+    const payment_id = generatePaymentId();
+
+    // Create UPI payment link that opens UPI apps
+    const upiLink = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(MERCHANT_NAME)}&am=${amount}&cu=INR&tn=${encodeURIComponent(description + '-' + payment_id)}`;
+
+    // Generate QR code from UPI link
+    const qrCode = await QRCode.toDataURL(upiLink);
+
+    // Save as pending payment in database
+    await pool.query(
+      'INSERT INTO payments (user_id, amount, description, transaction_id, status) VALUES ($1, $2, $3, $4, $5)',
+      [req.user.id, amount, description || 'Payment', payment_id, 'pending']
+    );
+
+    res.json({
+      success: true,
+      payment_id: payment_id,
+      upi_id: UPI_ID,
+      merchant_name: MERCHANT_NAME,
+      amount: amount,
+      upi_link: upiLink,
+      qr_code: qrCode,
+      message: '🎯 QR code generated! Scan with any UPI app to pay to ' + UPI_ID,
+      instructions: {
+        mobile: 'Click the Pay button to open UPI app directly',
+        desktop: 'Scan the QR code with your phone camera or UPI app'
+      }
+    });
+
+  } catch (error) {
+    console.error('Create UPI payment error:', error);
+    res.status(500).json({ error: 'Failed to create payment' });
+  }
+});
+
+// Confirm payment after customer pays
+app.post('/api/confirm-payment', auth, async (req, res) => {
+  try {
+    const { payment_id } = req.body;
+
+    if (!payment_id) {
+      return res.status(400).json({ error: 'Payment ID required' });
+    }
+
+    // Update payment status to pending verification
+    const result = await pool.query(
+      'UPDATE payments SET status = $1 WHERE transaction_id = $2 AND user_id = $3 RETURNING *',
+      ['pending_verification', payment_id, req.user.id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Payment not found' });
+    }
+
+    res.json({
+      success: true,
+      message: '🎉 Thank you! Payment confirmation received. We will verify and update you shortly!',
+      payment: result.rows[0],
+      next_steps: 'Admin will verify your payment and update the status within 24 hours.'
+    });
+
+  } catch (error) {
+    console.error('Confirm payment error:', error);
+    res.status(500).json({ error: 'Failed to confirm payment' });
+  }
+});
+
+// Get pending payments (for admin)
+app.get('/api/pending-payments', auth, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT p.*, u.email as user_email
+      FROM payments p
+      JOIN users u ON p.user_id = u.id
+      WHERE p.status IN ('pending', 'pending_verification')
+      ORDER BY p.created_at DESC
+    `);
+
+    res.json({
+      success: true,
+      count: result.rows.length,
+      payments: result.rows
+    });
+
+  } catch (error) {
+    console.error('Fetch pending payments error:', error);
+    res.status(500).json({ error: 'Failed to fetch payments' });
+  }
+});
+
+// Verify payment (admin manually verifies)
+app.post('/api/verify-payment', auth, async (req, res) => {
+  try {
+    const { payment_id } = req.body;
+
+    if (!payment_id) {
+      return res.status(400).json({ error: 'Payment ID required' });
+    }
+
+    const result = await pool.query(
+      'UPDATE payments SET status = $1 WHERE transaction_id = $2 RETURNING *',
+      ['completed', payment_id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Payment not found' });
+    }
+
+    res.json({
+      success: true,
+      message: '✅ Payment verified successfully',
+      payment: result.rows[0]
+    });
+
+  } catch (error) {
+    console.error('Verify payment error:', error);
+    res.status(500).json({ error: 'Failed to verify payment' });
+  }
+});
+
+// ================================
 // DEBUG ENDPOINT
 // ================================
 
@@ -205,6 +348,7 @@ app.get('/api/debug/check-db', async (req, res) => {
       success: true,
       connected: true,
       connected_to: process.env.DATABASE_URL?.split('@')[1]?.split('/')[0],
+      upi_id: UPI_ID,
       data: result.rows[0]
     });
   } catch (error) {
