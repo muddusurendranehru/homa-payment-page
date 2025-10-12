@@ -1,5 +1,22 @@
 # 🚀 REPLIT DEPLOYMENT PROMPT - Complete Healthcare Payment System
 
+## 🔐 NEON DATABASE CREDENTIALS (Copy First!)
+
+```
+FULL CONNECTION STRING:
+postgresql://neondb_owner:npg_KgY1jcShHne2@ep-cold-wildflower-adibenmi-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require
+
+INDIVIDUAL CREDENTIALS:
+Host: ep-cold-wildflower-adibenmi-pooler.us-east-1.aws.neon.tech
+Port: 5432
+Database: neondb
+Username: neondb_owner
+Password: npg_KgY1jcShHne2
+SSL Mode: require
+```
+
+---
+
 ## Copy and paste this to Replit AI Agent:
 
 ---
@@ -243,12 +260,27 @@ REQUIRED FEATURES:
 
 8. ENVIRONMENT VARIABLES (.env):
    ```
+   # NEON DATABASE CREDENTIALS (COPY EXACTLY)
    DATABASE_URL=postgresql://neondb_owner:npg_KgY1jcShHne2@ep-cold-wildflower-adibenmi-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require
+   DB_HOST=ep-cold-wildflower-adibenmi-pooler.us-east-1.aws.neon.tech
+   DB_PORT=5432
+   DB_NAME=neondb
+   DB_USER=neondb_owner
+   DB_PASSWORD=npg_KgY1jcShHne2
+   
+   # JWT AUTHENTICATION
    JWT_SECRET=homa-healthcare-secret-key-2024
+   JWT_EXPIRES_IN=24h
+   
+   # SERVER CONFIG
    PORT=3000
    NODE_ENV=production
+   FRONTEND_URL=https://your-repl-name.repl.co
+   
+   # UPI PAYMENT
    UPI_ID=homahealthcare@paytm
    MERCHANT_NAME=Homa Healthcare
+   MERCHANT_CODE=HOMA001
    ```
 
 9. STARTUP SEQUENCE:
