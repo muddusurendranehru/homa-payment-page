@@ -1,19 +1,49 @@
 # 🚀 REPLIT DEPLOYMENT PROMPT - Complete Healthcare Payment System
 
-## 🔐 NEON DATABASE CREDENTIALS (Copy First!)
+## 🔐 COPY THESE CREDENTIALS TO REPLIT SECRETS
 
+### 1. NEON DATABASE CREDENTIALS
 ```
-FULL CONNECTION STRING:
+DATABASE_URL (Required):
 postgresql://neondb_owner:npg_KgY1jcShHne2@ep-cold-wildflower-adibenmi-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require
 
-INDIVIDUAL CREDENTIALS:
-Host: ep-cold-wildflower-adibenmi-pooler.us-east-1.aws.neon.tech
-Port: 5432
-Database: neondb
-Username: neondb_owner
-Password: npg_KgY1jcShHne2
-SSL Mode: require
+DB_HOST: ep-cold-wildflower-adibenmi-pooler.us-east-1.aws.neon.tech
+DB_PORT: 5432
+DB_NAME: neondb
+DB_USER: neondb_owner
+DB_PASSWORD: npg_KgY1jcShHne2
 ```
+
+### 2. JWT SECRET (Required for Authentication)
+```
+JWT_SECRET: homa-healthcare-super-secret-key-2024-change-in-production
+JWT_EXPIRES_IN: 24h
+```
+
+### 3. SERVER CONFIG
+```
+PORT: 3000
+NODE_ENV: production
+```
+
+### 4. UPI PAYMENT (Optional)
+```
+UPI_ID: homahealthcare@paytm
+MERCHANT_NAME: Homa Healthcare
+```
+
+### HOW TO ADD IN REPLIT:
+1. Click 🔒 "Secrets" tab (padlock icon)
+2. Add each variable:
+   - Key: DATABASE_URL
+   - Value: postgresql://neondb_owner:npg_KgY1jcShHne2@ep-cold-wildflower-adibenmi-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require
+   
+   - Key: JWT_SECRET
+   - Value: homa-healthcare-super-secret-key-2024-change-in-production
+   
+   - Key: PORT
+   - Value: 3000
+3. Click "Add Secret" for each
 
 ---
 
