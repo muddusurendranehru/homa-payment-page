@@ -185,6 +185,38 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK' });
 });
 
+// ================================
+// DEBUG ENDPOINT
+// ================================
+
+// Debug endpoint to check database connection
+app.get('/api/debug/check-db', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        current_database() as database_name,
+        current_user as user_name,
+        version() as pg_version,
+        (SELECT COUNT(*) FROM users) as total_users,
+        (SELECT COUNT(*) FROM payments) as total_payments
+    `);
+    
+    res.json({
+      success: true,
+      connected: true,
+      connected_to: process.env.DATABASE_URL?.split('@')[1]?.split('/')[0],
+      data: result.rows[0]
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      connected: false,
+      error: error.message,
+      hint: 'Make sure DATABASE_URL is set in Replit Secrets and tables exist'
+    });
+  }
+});
+
 app.listen(PORT, async () => {
   console.log(`🚀 Server running on port ${PORT}`);
   await initDatabase();
