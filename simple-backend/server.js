@@ -190,7 +190,7 @@ app.get('/health', (req, res) => {
 // UPI PAYMENT WITH QR CODE
 // ================================
 
-const UPI_ID = '99637219992@ybl';
+const UPI_ID = '9963721999@ybl';
 const MERCHANT_NAME = 'Homa Healthcare';
 
 // Generate unique payment ID

@@ -46,7 +46,7 @@ Content-Type: application/json
 {
   "success": true,
   "payment_id": "PMT1234567890",
-  "upi_id": "99637219992@ybl",
+  "upi_id": "9963721999@ybl",
   "amount": 10,
   "upi_link": "upi://pay?pa=99637219992@ybl&pn=Homa%20Healthcare&am=10&cu=INR&tn=Test%20payment-PMT1234567890",
   "qr_code": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...",
