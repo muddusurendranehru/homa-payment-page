@@ -1,22 +1,22 @@
-const twilio = require('twilio');
 const nodemailer = require('nodemailer');
 
-// Initialize Twilio client
-const twilioClient = twilio(
-    process.env.TWILIO_ACCOUNT_SID,
-    process.env.TWILIO_AUTH_TOKEN
-);
-
-// Email transporter setup
-const emailTransporter = nodemailer.createTransporter({
-    host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT,
-    secure: false,
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
+// Email transporter setup (only if SMTP is configured)
+let emailTransporter = null;
+if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+    try {
+        emailTransporter = nodemailer.createTransporter({
+            host: process.env.SMTP_HOST,
+            port: process.env.SMTP_PORT,
+            secure: false,
+            auth: {
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASS
+            }
+        });
+    } catch (error) {
+        console.log('⚠️  Email transporter initialization skipped - SMTP not configured');
     }
-});
+}
 
 /**
  * Generate UPI payment link
@@ -38,35 +38,14 @@ const generateUPILink = (params) => {
 };
 
 /**
- * Send payment SMS notification
+ * Send payment SMS notification (Twilio removed - implement your own SMS service)
  * @param {string} phoneNumber - Recipient phone number
  * @param {Object} paymentData - Payment information
  */
 const sendPaymentSMS = async (phoneNumber, paymentData) => {
-    try {
-        if (!twilioClient || !phoneNumber) {
-            console.log('SMS not sent - Twilio not configured or phone number missing');
-            return;
-        }
-
-        let message = '';
-        
-        if (paymentData.status === 'completed') {
-            message = `✅ Payment confirmed! ₹${paymentData.amount} received for Homa Healthcare. Transaction ID: ${paymentData.transactionId}`;
-        } else {
-            message = `💳 Pay ₹${paymentData.amount} for Homa Healthcare: ${paymentData.upiLink}`;
-        }
-
-        await twilioClient.messages.create({
-            body: message,
-            from: process.env.TWILIO_PHONE_NUMBER,
-            to: phoneNumber
-        });
-
-        console.log(`SMS sent to ${phoneNumber}`);
-    } catch (error) {
-        console.error('SMS sending failed:', error);
-    }
+    console.log('📱 SMS notification disabled - Twilio removed from project');
+    console.log(`Would send SMS to ${phoneNumber}:`, paymentData);
+    return;
 };
 
 /**
@@ -196,7 +175,7 @@ const formatAmount = (amount) => {
 
 module.exports = {
     generateUPILink,
-    sendPaymentSMS,
+    sendPaymentSMS, // Disabled - Twilio removed
     sendPaymentEmail,
     sendTelegramNotification,
     isValidUPIId,

@@ -7,72 +7,37 @@ yarn-error.log*
 # Environment variables
 .env
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.production
 
-# Logs
-logs
-*.log
-
-# Runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
-
-# Coverage directory used by tools like istanbul
-coverage/
-
-# nyc test coverage
-.nyc_output
-
-# Dependency directories
-node_modules/
-jspm_packages/
-
-# Optional npm cache directory
-.npm
-
-# Optional REPL history
-.node_repl_history
-
-# Output of 'npm pack'
-*.tgz
-
-# Yarn Integrity file
-.yarn-integrity
-
-# dotenv environment variables file
-.env
-
-# IDE files
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# OS generated files
+# OS
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
 
-# Build outputs
-build/
+# Logs
+logs/
+*.log
+
+# Build files
 dist/
-frontend/build/
+build/
 
-# Vercel
-.vercel
-
-# Database
-*.sqlite
-*.db
+# Testing
+coverage/
 
 # Temporary files
-tmp/
-temp/
+*.tmp
+*.temp
+
+# Replit (will be auto-generated)
+.replit
+replit.nix
+
+# Don't commit sensitive data
+*.key
+*.pem

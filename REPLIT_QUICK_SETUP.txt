@@ -1,0 +1,120 @@
+================================================
+REPLIT QUICK SETUP - COPY & PASTE
+Homa Healthcare Payment System
+================================================
+
+STEP 1: GO TO REPLIT
+https://replit.com
+
+STEP 2: CLICK SECRETS (🔒 PADLOCK ICON)
+
+STEP 3: COPY EACH LINE BELOW AS A SECRET
+================================================
+
+Secret 1:
+Key: DATABASE_URL
+Value: postgresql://neondb_owner:npg_KgY1jcShHne2@ep-cold-wildflower-adibenmi-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require
+
+Secret 2:
+Key: JWT_SECRET
+Value: homa-healthcare-super-secret-jwt-key-minimum-32-characters-long-2024
+
+Secret 3:
+Key: JWT_EXPIRES_IN
+Value: 24h
+
+Secret 4:
+Key: PORT
+Value: 3000
+
+Secret 5:
+Key: NODE_ENV
+Value: production
+
+Secret 6:
+Key: DB_HOST
+Value: ep-cold-wildflower-adibenmi-pooler.us-east-1.aws.neon.tech
+
+Secret 7:
+Key: DB_PORT
+Value: 5432
+
+Secret 8:
+Key: DB_NAME
+Value: neondb
+
+Secret 9:
+Key: DB_USER
+Value: neondb_owner
+
+Secret 10:
+Key: DB_PASSWORD
+Value: npg_KgY1jcShHne2
+
+Secret 11 (Optional):
+Key: UPI_ID
+Value: homahealthcare@paytm
+
+Secret 12 (Optional):
+Key: MERCHANT_NAME
+Value: Homa Healthcare
+
+Secret 13 (Optional):
+Key: MERCHANT_CODE
+Value: HOMA001
+
+================================================
+STEP 4: CLICK RUN BUTTON ▶️
+================================================
+
+STEP 5: TEST YOUR APP
+================================================
+
+Test URL: https://your-repl-name.repl.co/health
+
+Expected Response:
+{
+  "status": "OK",
+  "message": "Homa Healthcare Payment System is running"
+}
+
+================================================
+TEST LOGIN
+================================================
+
+Endpoint: POST https://your-repl-name.repl.co/api/auth/login
+
+Body (JSON):
+{
+  "email": "admin@homaclinic.com",
+  "password": "admin123"
+}
+
+================================================
+DONE! YOUR SYSTEM IS LIVE! 🎉
+================================================
+
+Admin Login:
+Email: admin@homaclinic.com
+Password: admin123
+
+Your API Base: https://your-repl-name.repl.co/api
+
+Available Endpoints:
+- /api/auth/register (Sign Up)
+- /api/auth/login (Login)
+- /api/dashboard/stats (Dashboard)
+- /api/payments/generate-upi (Payments)
+- /api/appointments (Appointments)
+
+================================================
+NEED HELP?
+================================================
+
+1. Check Console tab for errors
+2. Verify all 13 secrets are added
+3. Make sure DATABASE_URL has no extra spaces
+4. Restart the Repl if needed
+
+================================================
+

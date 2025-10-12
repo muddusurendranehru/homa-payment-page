@@ -1,7 +1,8 @@
 const { Client } = require('pg');
+require('dotenv').config();
 
-// Your Neon database connection string
-const connectionString = 'postgresql://neondb_owner:npg_KgY1jcShHne2@ep-cold-wildflower-adibenmi-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require';
+// Your Neon database connection string from environment
+const connectionString = process.env.DATABASE_URL;
 
 const client = new Client({
     connectionString: connectionString,

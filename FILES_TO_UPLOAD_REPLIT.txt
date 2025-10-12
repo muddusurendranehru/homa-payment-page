@@ -1,0 +1,92 @@
+================================================
+FILES TO UPLOAD TO REPLIT
+================================================
+
+✅ REQUIRED FOLDERS & FILES:
+================================================
+
+📁 backend/
+  📁 config/
+    ✅ database.js
+  📁 middleware/
+    ✅ auth.js
+    ✅ errorHandler.js
+  📁 models/
+    ✅ index.js
+    ✅ User.js
+    ✅ Payment.js
+    ✅ PaymentSession.js
+    ✅ Appointment.js
+  📁 routes/
+    ✅ auth.js
+    ✅ dashboard.js
+    ✅ payments.js
+    ✅ users.js
+    ✅ appointments.js
+  📁 utils/
+    ✅ paymentUtils.js
+  ✅ server.js (MAIN FILE!)
+
+📁 frontend/ (Optional - if building UI)
+  ✅ package.json
+  📁 src/
+    📁 components/
+    📁 services/
+
+✅ package.json (ROOT - IMPORTANT!)
+✅ package-lock.json
+✅ .replit
+✅ replit.nix
+✅ setup-database.js
+
+================================================
+❌ DO NOT UPLOAD THESE:
+================================================
+
+❌ node_modules/ (Replit will install automatically)
+❌ .env (Use Replit Secrets instead)
+❌ .git/ (Upload via GitHub import instead)
+❌ test files (check-*.js, test-*.js)
+
+================================================
+📦 UPLOAD METHOD 1: ZIP FILE
+================================================
+
+1. Select all folders listed above
+2. Create ZIP file: homa-payment-system.zip
+3. In Replit, click "Upload" and select ZIP
+4. Extract in Replit workspace
+
+================================================
+📦 UPLOAD METHOD 2: GITHUB (RECOMMENDED)
+================================================
+
+1. Push your project to GitHub
+2. In Replit, click "+ Create Repl"
+3. Choose "Import from GitHub"
+4. Paste repository URL
+5. Click "Import"
+
+================================================
+🔧 AFTER UPLOAD:
+================================================
+
+1. Add all 13 environment variables to Secrets 🔒
+2. Click Run ▶️
+3. Wait for "npm install" to complete
+4. Server starts automatically
+
+================================================
+✅ VERIFICATION CHECKLIST:
+================================================
+
+- [ ] backend/server.js exists
+- [ ] package.json exists in root
+- [ ] All 13 secrets added
+- [ ] .replit file exists
+- [ ] replit.nix exists
+- [ ] Clicked Run button
+- [ ] Server started successfully
+
+================================================
+

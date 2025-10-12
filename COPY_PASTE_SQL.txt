@@ -1,0 +1,106 @@
+================================================
+NEON DATABASE - COPY & PASTE SQL QUERIES
+================================================
+
+Go to: https://console.neon.tech
+Click: SQL Editor
+Copy each query below and run them one by one
+
+================================================
+1. LIST ALL TABLES
+================================================
+
+SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE' ORDER BY table_name;
+
+================================================
+2. VIEW ALL USERS
+================================================
+
+SELECT id, email, full_name, phone, role, is_verified, created_at FROM users ORDER BY created_at DESC;
+
+================================================
+3. CHECK USERS TABLE STRUCTURE
+================================================
+
+SELECT column_name, data_type, is_nullable, column_default FROM information_schema.columns WHERE table_name = 'users' ORDER BY ordinal_position;
+
+================================================
+4. COUNT RECORDS IN ALL TABLES
+================================================
+
+SELECT 'users' as table, COUNT(*) as records FROM users
+UNION ALL SELECT 'payments', COUNT(*) FROM payments
+UNION ALL SELECT 'appointments', COUNT(*) FROM appointments
+UNION ALL SELECT 'doctors', COUNT(*) FROM doctors
+UNION ALL SELECT 'patient_profiles', COUNT(*) FROM patient_profiles
+UNION ALL SELECT 'payment_sessions', COUNT(*) FROM payment_sessions
+UNION ALL SELECT 'notifications', COUNT(*) FROM notifications;
+
+================================================
+5. CREATE TEST PATIENT USER
+   Email: test@patient.com
+   Password: password123
+================================================
+
+INSERT INTO users (email, password_hash, full_name, phone, role, is_verified, created_at, updated_at) 
+VALUES ('test@patient.com', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYqYVbV0WKS', 'Test Patient', '9876543299', 'patient', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) 
+ON CONFLICT (email) DO NOTHING 
+RETURNING id, email, full_name, role;
+
+================================================
+6. CHECK IF EMAIL EXISTS (Sign Up Validation)
+================================================
+
+SELECT COUNT(*) as exists_count, CASE WHEN COUNT(*) > 0 THEN 'Email Taken' ELSE 'Available' END as status FROM users WHERE email = 'test@patient.com';
+
+================================================
+7. GET USER BY EMAIL (Login Step 1)
+================================================
+
+SELECT id, email, password_hash, full_name, role, is_verified FROM users WHERE email = 'admin@homaclinic.com';
+
+================================================
+8. VERIFY PASSWORD HASHES
+================================================
+
+SELECT email, role, CASE WHEN password_hash LIKE '$2b$%' THEN 'Valid' ELSE 'Invalid' END as hash_status, LENGTH(password_hash) as length FROM users;
+
+================================================
+9. COMPLETE HEALTH CHECK
+================================================
+
+SELECT 'Total Tables' as metric, COUNT(*)::text FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+UNION ALL SELECT 'Total Users', COUNT(*)::text FROM users
+UNION ALL SELECT 'Admin Users', COUNT(*)::text FROM users WHERE role = 'admin'
+UNION ALL SELECT 'Verified Users', COUNT(*)::text FROM users WHERE is_verified = true
+UNION ALL SELECT 'Total Payments', COUNT(*)::text FROM payments;
+
+================================================
+10. DELETE TEST USER (if needed)
+================================================
+
+DELETE FROM users WHERE email = 'test@patient.com';
+
+================================================
+CREDENTIALS FOR TESTING
+================================================
+
+Admin User (Pre-created):
+  Email: admin@homaclinic.com
+  Password: admin123
+
+Test Patient (Create with Query #5):
+  Email: test@patient.com
+  Password: password123
+
+================================================
+EXPECTED RESULTS
+================================================
+
+Query #1: Should show 8-9 tables including users, payments, appointments
+Query #2: Should show at least 1 admin user
+Query #4: users should have at least 1 record
+Query #8: All hashes should show "Valid" with length 60
+
+================================================
+
