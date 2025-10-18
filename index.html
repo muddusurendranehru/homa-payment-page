@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Simple Payment System</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 600px; 
+            margin: 0 auto; 
+            padding: 10px; 
+            background: #f5f5f5;
+        }
+        
+        @media (max-width: 768px) {
+            body { padding: 5px; }
+            .form-group input, .form-group select, button { 
+                font-size: 16px; 
+                padding: 12px; 
+            }
+            .payment-card { 
+                margin: 5px 0; 
+                padding: 10px; 
+            }
+            #qrCode { 
+                width: 150px !important; 
+                height: 150px !important; 
+            }
+        }
+        .form-group { margin: 15px 0; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select, button { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 5px; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .hidden { display: none; }
+        .success { color: green; }
+        .error { color: red; }
+        .payment-card { border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Simple Payment System</h1>
+    
+    <!-- Login Form -->
+    <div id="loginForm">
+        <h2>Login</h2>
+        <div class="form-group">
+            <label>Email:</label>
+            <input type="email" id="loginEmail" placeholder="Enter your email">
+        </div>
+        <div class="form-group">
+            <label>Password:</label>
+            <input type="password" id="loginPassword" placeholder="Enter your password">
+        </div>
+        <button onclick="login()">Login</button>
+        <p>Don't have an account? <a href="#" onclick="showSignup()">Sign up</a></p>
+    </div>
+    
+    <!-- Signup Form -->
+    <div id="signupForm" class="hidden">
+        <h2>Sign Up</h2>
+        <div class="form-group">
+            <label>Email:</label>
+            <input type="email" id="signupEmail" placeholder="Enter your email">
+        </div>
+        <div class="form-group">
+            <label>Password:</label>
+            <input type="password" id="signupPassword" placeholder="Enter your password">
+        </div>
+        <div class="form-group">
+            <label>Confirm Password:</label>
+            <input type="password" id="signupConfirmPassword" placeholder="Confirm your password">
+        </div>
+        <button onclick="signup()">Sign Up</button>
+        <p>Already have an account? <a href="#" onclick="showLogin()">Login</a></p>
+    </div>
+    
+    <!-- Dashboard -->
+    <div id="dashboard" class="hidden">
+        <h2>Welcome to Dashboard!</h2>
+        <p>User: <span id="userEmail"></span></p>
+        
+        <!-- Create Payment -->
+        <div class="payment-card">
+            <h3>Create Payment</h3>
+            <div class="form-group">
+                <label>Amount (₹):</label>
+                <input type="number" id="paymentAmount" placeholder="Enter amount" min="1" max="9999">
+            </div>
+            <div class="form-group">
+                <label>Description:</label>
+                <input type="text" id="paymentDescription" placeholder="Payment description">
+            </div>
+            <button onclick="createPayment()">Create Payment</button>
+        </div>
+        
+        <!-- QR Code and UPI Link -->
+        <div id="paymentSection" class="hidden">
+            <div class="payment-card">
+                <h3>Payment Details</h3>
+                <div id="qrCodeSection">
+                    <img id="qrCode" src="" alt="QR Code" style="width: 200px; height: 200px; display: block; margin: 0 auto;">
+                    <p style="text-align: center; font-weight: bold;">UPI ID: 9963721999@ybl</p>
+                </div>
+                <div id="upiLinkSection">
+                    <a id="upiLink" href="" target="_blank" style="display: block; background: #007bff; color: white; padding: 15px; text-align: center; text-decoration: none; border-radius: 5px; margin: 10px 0;">
+                        💳 Click to Pay ₹<span id="displayAmount"></span>
+                    </a>
+                </div>
+                <div id="paidSection" class="hidden">
+                    <button onclick="markAsPaid()" style="background: #28a745; color: white; padding: 15px; width: 100%; border: none; border-radius: 5px; font-size: 16px;">
+                        ✅ I Have Paid
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Payment History -->
+        <div class="payment-card">
+            <h3>Payment History</h3>
+            <button onclick="loadPayments()">Load Payments</button>
+            <div id="paymentsList"></div>
+        </div>
+        
+        <button onclick="logout()">Logout</button>
+    </div>
+    
+    <div id="message"></div>
+
+    <script>
+        let currentUser = null;
+        let currentToken = null;
+        
+        // Show/hide forms
+        function showLogin() {
+            document.getElementById('loginForm').classList.remove('hidden');
+            document.getElementById('signupForm').classList.add('hidden');
+            document.getElementById('dashboard').classList.add('hidden');
+        }
+        
+        function showSignup() {
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('signupForm').classList.remove('hidden');
+            document.getElementById('dashboard').classList.add('hidden');
+        }
+        
+        function showDashboard() {
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('signupForm').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+        }
+        
+        // API calls
+        async function apiCall(url, method, data) {
+            try {
+                const response = await fetch(url, {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: data ? JSON.stringify(data) : undefined
+                });
+                
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.error || 'Request failed');
+                }
+                
+                return result;
+            } catch (error) {
+                showMessage(error.message, 'error');
+                throw error;
+            }
+        }
+        
+        // Auth functions
+        async function signup() {
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = document.getElementById('signupConfirmPassword').value;
+            
+            if (!email || !password || !confirmPassword) {
+                showMessage('Please fill all fields', 'error');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                showMessage('Passwords do not match', 'error');
+                return;
+            }
+            
+            try {
+                const result = await apiCall('https://payment-backend-cc7i.onrender.com/api/signup', 'POST', { email, password });
+                showMessage('Signup successful!', 'success');
+                showLogin();
+            } catch (error) {
+                // Error already shown by apiCall
+            }
+        }
+        
+        async function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!email || !password) {
+                showMessage('Please fill all fields', 'error');
+                return;
+            }
+            
+            try {
+                const result = await apiCall('https://payment-backend-cc7i.onrender.com/api/login', 'POST', { email, password });
+                currentUser = result.user;
+                currentToken = result.token;
+                document.getElementById('userEmail').textContent = currentUser.email;
+                showMessage('Login successful!', 'success');
+                showDashboard();
+            } catch (error) {
+                // Error already shown by apiCall
+            }
+        }
+        
+        function logout() {
+            currentUser = null;
+            currentToken = null;
+            showMessage('Logged out successfully', 'success');
+            showLogin();
+        }
+        
+        // Payment functions
+        async function createPayment() {
+            const amount = document.getElementById('paymentAmount').value;
+            const description = document.getElementById('paymentDescription').value;
+            
+            if (!amount || !description) {
+                showMessage('Please fill all fields', 'error');
+                return;
+            }
+            
+            try {
+                const result = await apiCall('https://payment-backend-cc7i.onrender.com/api/payment', 'POST', {
+                    amount: parseFloat(amount),
+                    description,
+                    userId: currentUser.id
+                });
+                showMessage('Payment created successfully!', 'success');
+                
+                // Show QR code and UPI link
+                generateQRCodeAndUPILink(amount, description);
+                
+                document.getElementById('paymentAmount').value = '';
+                document.getElementById('paymentDescription').value = '';
+                loadPayments();
+            } catch (error) {
+                // Error already shown by apiCall
+            }
+        }
+        
+        function generateQRCodeAndUPILink(amount, description) {
+            const UPI_ID = '9963721999@ybl';
+            const upiString = `upi://pay?pa=${UPI_ID}&pn=PaymentSystem&am=${amount}&cu=INR&tn=${encodeURIComponent(description)}`;
+            
+            // Generate QR code using QR Server API
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiString)}`;
+            
+            // Update QR code
+            document.getElementById('qrCode').src = qrUrl;
+            
+            // Update UPI link
+            document.getElementById('upiLink').href = upiString;
+            document.getElementById('displayAmount').textContent = amount;
+            
+            // Show payment section
+            document.getElementById('paymentSection').classList.remove('hidden');
+            document.getElementById('paidSection').classList.remove('hidden');
+        }
+        
+        async function markAsPaid() {
+            try {
+                // Get the latest payment ID (we'll need to store this when creating payment)
+                const paymentsResponse = await apiCall(`https://payment-backend-cc7i.onrender.com/api/payments/${currentUser.id}`, 'GET');
+                if (paymentsResponse.payments.length > 0) {
+                    const latestPayment = paymentsResponse.payments[0];
+                    
+                    // Update payment status to 'paid'
+                    await apiCall(`https://payment-backend-cc7i.onrender.com/api/payment/${latestPayment.id}/status`, 'PUT', { status: 'paid' });
+                    
+                    showMessage('Payment marked as paid! Thank you!', 'success');
+                    document.getElementById('paidSection').classList.add('hidden');
+                    document.getElementById('paymentSection').classList.add('hidden');
+                    loadPayments();
+                } else {
+                    showMessage('No payment found to mark as paid', 'error');
+                }
+            } catch (error) {
+                showMessage('Error updating payment status', 'error');
+            }
+        }
+        
+        async function loadPayments() {
+            try {
+                const result = await apiCall(`https://payment-backend-cc7i.onrender.com/api/payments/${currentUser.id}`, 'GET');
+                displayPayments(result.payments);
+            } catch (error) {
+                // Error already shown by apiCall
+            }
+        }
+        
+        function displayPayments(payments) {
+            const container = document.getElementById('paymentsList');
+            container.innerHTML = '';
+            
+            if (payments.length === 0) {
+                container.innerHTML = '<p>No payments found</p>';
+                return;
+            }
+            
+            payments.forEach(payment => {
+                const div = document.createElement('div');
+                div.className = 'payment-card';
+                const statusColor = payment.status === 'paid' ? 'green' : 'orange';
+                div.innerHTML = `
+                    <h4>Payment #${payment.id.substring(0, 8)}</h4>
+                    <p><strong>Amount:</strong> ₹${payment.amount}</p>
+                    <p><strong>Description:</strong> ${payment.description}</p>
+                    <p><strong>Status:</strong> <span style="color: ${statusColor}; font-weight: bold;">${payment.status.toUpperCase()}</span></p>
+                    <p><strong>Transaction ID:</strong> ${payment.transaction_id || 'N/A'}</p>
+                    <p><strong>Date:</strong> ${new Date(payment.created_at).toLocaleString()}</p>
+                `;
+                container.appendChild(div);
+            });
+        }
+        
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = message;
+            messageDiv.className = type;
+        }
+        
+        // Initialize
+        showLogin();
+    </script>
+</body>
+</html>
