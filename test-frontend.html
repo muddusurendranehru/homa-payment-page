@@ -2,10 +2,32 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Simple Payment System</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 600px; 
+            margin: 0 auto; 
+            padding: 10px; 
+            background: #f5f5f5;
+        }
+        
+        @media (max-width: 768px) {
+            body { padding: 5px; }
+            .form-group input, .form-group select, button { 
+                font-size: 16px; 
+                padding: 12px; 
+            }
+            .payment-card { 
+                margin: 5px 0; 
+                padding: 10px; 
+            }
+            #qrCode { 
+                width: 150px !important; 
+                height: 150px !important; 
+            }
+        }
         .form-group { margin: 15px 0; }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
         input, select, button { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 5px; }
