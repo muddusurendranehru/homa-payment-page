@@ -192,7 +192,7 @@
             }
             
             try {
-                const result = await apiCall('https://your-backend-name.onrender.com/api/signup', 'POST', { email, password });
+                const result = await apiCall('https://payment-backend-cc7i.onrender.com/api/signup', 'POST', { email, password });
                 showMessage('Signup successful!', 'success');
                 showLogin();
             } catch (error) {
@@ -210,7 +210,7 @@
             }
             
             try {
-                const result = await apiCall('https://your-backend-name.onrender.com/api/login', 'POST', { email, password });
+                const result = await apiCall('https://payment-backend-cc7i.onrender.com/api/login', 'POST', { email, password });
                 currentUser = result.user;
                 currentToken = result.token;
                 document.getElementById('userEmail').textContent = currentUser.email;
@@ -239,7 +239,7 @@
             }
             
             try {
-                const result = await apiCall('https://your-backend-name.onrender.com/api/payment', 'POST', {
+                const result = await apiCall('https://payment-backend-cc7i.onrender.com/api/payment', 'POST', {
                     amount: parseFloat(amount),
                     description,
                     userId: currentUser.id
@@ -279,12 +279,12 @@
         async function markAsPaid() {
             try {
                 // Get the latest payment ID (we'll need to store this when creating payment)
-                const paymentsResponse = await apiCall(`https://your-backend-name.onrender.com/api/payments/${currentUser.id}`, 'GET');
+                const paymentsResponse = await apiCall(`https://payment-backend-cc7i.onrender.com/api/payments/${currentUser.id}`, 'GET');
                 if (paymentsResponse.payments.length > 0) {
                     const latestPayment = paymentsResponse.payments[0];
                     
                     // Update payment status to 'paid'
-                    await apiCall(`https://your-backend-name.onrender.com/api/payment/${latestPayment.id}/status`, 'PUT', { status: 'paid' });
+                    await apiCall(`https://payment-backend-cc7i.onrender.com/api/payment/${latestPayment.id}/status`, 'PUT', { status: 'paid' });
                     
                     showMessage('Payment marked as paid! Thank you!', 'success');
                     document.getElementById('paidSection').classList.add('hidden');
@@ -300,7 +300,7 @@
         
         async function loadPayments() {
             try {
-                const result = await apiCall(`https://your-backend-name.onrender.com/api/payments/${currentUser.id}`, 'GET');
+                const result = await apiCall(`https://payment-backend-cc7i.onrender.com/api/payments/${currentUser.id}`, 'GET');
                 displayPayments(result.payments);
             } catch (error) {
                 // Error already shown by apiCall
