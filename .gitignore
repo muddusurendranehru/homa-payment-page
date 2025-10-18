@@ -3,41 +3,49 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+package-lock.json
 
 # Environment variables
 .env
 .env.local
+.env.development
+.env.test
 .env.production
+
+# Logs
+*.log
+server-log.txt
+frontend-log.txt
+
+# OS files
+.DS_Store
+Thumbs.db
 
 # IDE
 .vscode/
 .idea/
-*.swp
-*.swo
 
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs
-logs/
-*.log
-
-# Build files
+# Build outputs
 dist/
 build/
+.next/
+out/
+
+# Replit files
+.replit
+replit.nix
+.upm/
+.config/
+
+# Old folders (duplicates)
+healthcare-backend/
+simple-backend/
 
 # Testing
 coverage/
 
-# Temporary files
-*.tmp
-*.temp
-
-# Replit (will be auto-generated)
-.replit
-replit.nix
-
-# Don't commit sensitive data
-*.key
-*.pem
+# Misc
+*.swp
+*.swo
+*~
+.tmp/

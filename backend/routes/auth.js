@@ -16,14 +16,18 @@ const generateToken = (userId) => {
     );
 };
 
-// @route   POST /api/auth/register
+// @route   POST /api/auth/signup
 // @desc    Register a new user
 // @access  Public
-router.post('/register', [
+router.post('/signup', [
     body('email').isEmail().normalizeEmail(),
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-    body('full_name').trim().isLength({ min: 2 }).withMessage('Full name is required'),
-    body('phone').isMobilePhone('en-IN').withMessage('Valid Indian phone number required')
+    body('confirmPassword').custom((value, { req }) => {
+        if (value !== req.body.password) {
+            throw new Error('Passwords do not match');
+        }
+        return true;
+    })
 ], async (req, res) => {
     try {
         // Check validation errors
@@ -36,7 +40,7 @@ router.post('/register', [
             });
         }
 
-        const { email, password, full_name, phone, role = 'patient' } = req.body;
+        const { email, password } = req.body;
 
         // Check if user already exists
         const existingUser = await User.findOne({ where: { email } });
@@ -47,15 +51,6 @@ router.post('/register', [
             });
         }
 
-        // Check if phone already exists
-        const existingPhone = await User.findOne({ where: { phone } });
-        if (existingPhone) {
-            return res.status(400).json({
-                success: false,
-                message: 'User with this phone number already exists'
-            });
-        }
-
         // Hash password
         const saltRounds = 12;
         const password_hash = await bcrypt.hash(password, saltRounds);
@@ -63,11 +58,7 @@ router.post('/register', [
         // Create user
         const user = await User.create({
             email,
-            password_hash,
-            full_name,
-            phone,
-            role,
-            is_verified: role === 'admin' // Auto-verify admin accounts
+            password_hash
         });
 
         // Generate token
@@ -77,10 +68,6 @@ router.post('/register', [
         const userData = {
             id: user.id,
             email: user.email,
-            full_name: user.full_name,
-            phone: user.phone,
-            role: user.role,
-            is_verified: user.is_verified,
             created_at: user.created_at
         };
 
@@ -148,10 +135,6 @@ router.post('/login', [
         const userData = {
             id: user.id,
             email: user.email,
-            full_name: user.full_name,
-            phone: user.phone,
-            role: user.role,
-            is_verified: user.is_verified,
             created_at: user.created_at
         };
 
@@ -182,10 +165,6 @@ router.get('/me', authenticateToken, async (req, res) => {
         const userData = {
             id: req.user.id,
             email: req.user.email,
-            full_name: req.user.full_name,
-            phone: req.user.phone,
-            role: req.user.role,
-            is_verified: req.user.is_verified,
             created_at: req.user.created_at
         };
 
@@ -199,6 +178,29 @@ router.get('/me', authenticateToken, async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Failed to get user profile',
+            error: error.message
+        });
+    }
+});
+
+// @route   POST /api/auth/logout
+// @desc    Logout user
+// @access  Private
+router.post('/logout', authenticateToken, async (req, res) => {
+    try {
+        // In a stateless JWT system, logout is handled client-side by removing the token
+        // This endpoint can be used for logging/analytics or if you implement token blacklisting
+        
+        res.json({
+            success: true,
+            message: 'Logged out successfully'
+        });
+
+    } catch (error) {
+        console.error('Logout error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Logout failed',
             error: error.message
         });
     }

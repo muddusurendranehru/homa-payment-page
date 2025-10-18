@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock, User, Phone } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 
@@ -8,17 +8,13 @@ interface SignUpFormData {
   email: string;
   password: string;
   confirmPassword: string;
-  full_name: string;
-  phone: string;
 }
 
 const SignUp: React.FC = () => {
   const [formData, setFormData] = useState<SignUpFormData>({
     email: '',
     password: '',
-    confirmPassword: '',
-    full_name: '',
-    phone: ''
+    confirmPassword: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -40,19 +36,6 @@ const SignUp: React.FC = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       toast.error('Please enter a valid email address');
-      return false;
-    }
-
-    // Full name validation
-    if (formData.full_name.length < 2) {
-      toast.error('Full name must be at least 2 characters');
-      return false;
-    }
-
-    // Phone validation (Indian format)
-    const phoneRegex = /^[6-9]\d{9}$/;
-    if (!phoneRegex.test(formData.phone)) {
-      toast.error('Please enter a valid 10-digit Indian phone number');
       return false;
     }
 
@@ -84,8 +67,7 @@ const SignUp: React.FC = () => {
       await register({
         email: formData.email,
         password: formData.password,
-        full_name: formData.full_name,
-        phone: formData.phone
+        confirmPassword: formData.confirmPassword
       });
       
       toast.success('Registration successful! Redirecting to dashboard...');
@@ -113,34 +95,12 @@ const SignUp: React.FC = () => {
             Create your account
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Join Homa Healthcare Payment System
+            Join Payment System
           </p>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
-            {/* Full Name */}
-            <div>
-              <label htmlFor="full_name" className="block text-sm font-medium text-gray-700">
-                Full Name *
-              </label>
-              <div className="mt-1 relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="full_name"
-                  name="full_name"
-                  type="text"
-                  required
-                  className="appearance-none rounded-lg relative block w-full pl-10 pr-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="Enter your full name"
-                  value={formData.full_name}
-                  onChange={handleInputChange}
-                />
-              </div>
-            </div>
-
             {/* Email */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -162,30 +122,6 @@ const SignUp: React.FC = () => {
                   onChange={handleInputChange}
                 />
               </div>
-            </div>
-
-            {/* Phone */}
-            <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-                Phone Number *
-              </label>
-              <div className="mt-1 relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Phone className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  required
-                  maxLength={10}
-                  className="appearance-none rounded-lg relative block w-full pl-10 pr-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="10-digit mobile number"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <p className="mt-1 text-xs text-gray-500">Example: 9876543210</p>
             </div>
 
             {/* Password */}

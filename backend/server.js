@@ -7,9 +7,7 @@ require('dotenv').config();
 
 // Import routes
 const authRoutes = require('./routes/auth');
-const userRoutes = require('./routes/users');
-const appointmentRoutes = require('./routes/appointments');
-const paymentRoutes = require('./routes/payments');
+const dataRoutes = require('./routes/data');
 const dashboardRoutes = require('./routes/dashboard');
 
 // Import middleware
@@ -45,7 +43,9 @@ app.use(express.urlencoded({ extended: true }));
 app.get('/health', (req, res) => {
     res.status(200).json({
         status: 'OK',
-        message: 'Homa Healthcare Payment System is running',
+        message: 'Payment Database System is running',
+        database: 'payment',
+        tables: 2,
         timestamp: new Date().toISOString(),
         port: PORT
     });
@@ -53,22 +53,20 @@ app.get('/health', (req, res) => {
 
 // API routes
 app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/appointments', appointmentRoutes);
-app.use('/api/payments', paymentRoutes);
+app.use('/api/data', dataRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
     res.json({
-        message: '🏥 Homa Healthcare Payment System API',
-        version: '2.0.0',
+        message: '💳 Payment Database System API',
+        version: '3.0.0',
+        database: 'payment',
+        tables: ['users', 'payments'],
         endpoints: {
             health: '/health',
-            auth: '/api/auth',
-            users: '/api/users',
-            appointments: '/api/appointments',
-            payments: '/api/payments',
+            auth: '/api/auth (signup, login, logout)',
+            data: '/api/data (POST to insert, GET to fetch)',
             dashboard: '/api/dashboard'
         }
     });

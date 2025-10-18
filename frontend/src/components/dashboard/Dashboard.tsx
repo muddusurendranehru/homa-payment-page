@@ -1,288 +1,328 @@
 import React, { useState, useEffect } from 'react';
-import { CreditCard, Calendar, DollarSign, Activity, Plus, History } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { CreditCard, LogOut, CheckCircle, QrCode } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { generatePayment, getDashboardStats, getQuickActions } from '../../services/api';
+import { insertData, fetchData, authAPI } from '../../services/api';
 import toast from 'react-hot-toast';
 
-interface DashboardStats {
-  totalPayments: number;
-  totalAmountPaid: number;
-  pendingPayments: number;
-  totalAppointments: number;
-  upcomingAppointments: number;
-  activePaymentSessions: number;
-}
-
-interface QuickAction {
+interface Payment {
   id: string;
-  title: string;
-  description: string;
-  action: string;
-  icon: string;
-  priority: 'high' | 'medium' | 'low';
+  amount: number;
+  description?: string;
+  status: string;
+  transaction_id?: string;
+  created_at: string;
 }
 
 const Dashboard: React.FC = () => {
-  const { user } = useAuth();
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [quickActions, setQuickActions] = useState<QuickAction[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [paymentAmount, setPaymentAmount] = useState('');
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Payment form state
+  const [paymentType, setPaymentType] = useState('');
+  const [amount, setAmount] = useState('');
+  const [showQR, setShowQR] = useState(false);
+  const [upiLink, setUpiLink] = useState('');
+  const [qrCodeUrl, setQrCodeUrl] = useState('');
+  const [currentPaymentId, setCurrentPaymentId] = useState('');
+
+  const UPI_ID = '9963721999@ybl';
 
   useEffect(() => {
-    fetchDashboardData();
+    loadPayments();
   }, []);
 
-  const fetchDashboardData = async () => {
+  const loadPayments = async () => {
     try {
-      setIsLoading(true);
-      const [statsResponse, actionsResponse] = await Promise.all([
-        getDashboardStats(),
-        getQuickActions()
-      ]);
-      
-      setStats(statsResponse.data.stats);
-      setQuickActions(actionsResponse.data.quickActions);
+      const response = await fetchData();
+      setPayments(response.data);
+    } catch (error) {
+      console.error('Load payments error:', error);
+    }
+  };
+
+  const handleGeneratePayment = async () => {
+    if (!paymentType) {
+      toast.error('Please select payment type');
+      return;
+    }
+    
+    if (!amount || parseFloat(amount) < 1 || parseFloat(amount) > 9999) {
+      toast.error('Please enter amount between ₹1 and ₹9999');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // Create payment record
+      const response = await insertData({
+        amount: parseFloat(amount),
+        description: paymentType,
+        status: 'pending'
+      });
+
+      setCurrentPaymentId(response.data.id);
+
+      // Generate UPI link
+      const upiString = `upi://pay?pa=${UPI_ID}&pn=Payment&am=${amount}&cu=INR&tn=${paymentType}`;
+      setUpiLink(upiString);
+
+      // Generate QR code using Google Charts API
+      const qrUrl = `https://chart.googleapis.com/chart?cht=qr&chl=${encodeURIComponent(upiString)}&chs=300x300&choe=UTF-8`;
+      setQrCodeUrl(qrUrl);
+
+      setShowQR(true);
+      toast.success('UPI payment link generated!');
     } catch (error: any) {
-      toast.error('Failed to load dashboard data');
-      console.error('Dashboard error:', error);
+      toast.error('Failed to generate payment');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleGeneratePayment = async () => {
-    if (!paymentAmount || parseFloat(paymentAmount) <= 0) {
-      toast.error('Please enter a valid amount');
-      return;
-    }
-
+  const handleMarkAsPaid = async () => {
     try {
-      const response = await generatePayment({
-        amount: parseFloat(paymentAmount),
-        description: `Payment for Homa Healthcare - ${user?.full_name}`
-      });
-
-      if (response.data.upi_link) {
-        // Open UPI link in new tab
-        window.open(response.data.upi_link, '_blank');
-        toast.success('UPI payment link generated! Check your browser.');
-        setShowPaymentModal(false);
-        setPaymentAmount('');
-        fetchDashboardData(); // Refresh data
-      }
-    } catch (error: any) {
-      toast.error('Failed to generate payment link');
-      console.error('Payment generation error:', error);
+      toast.success('Payment marked as completed!');
+      setShowQR(false);
+      setPaymentType('');
+      setAmount('');
+      setCurrentPaymentId('');
+      await loadPayments();
+    } catch (error) {
+      toast.error('Failed to update payment status');
     }
   };
 
-  const handleQuickAction = (action: QuickAction) => {
-    switch (action.action) {
-      case 'payment':
-        setShowPaymentModal(true);
-        break;
-      case 'appointment':
-        // Navigate to appointment booking
-        toast.info('Appointment booking coming soon!');
-        break;
-      case 'history':
-        // Navigate to payment history
-        toast.info('Payment history coming soon!');
-        break;
-      case 'session':
-        toast.info('Active payment sessions coming soon!');
-        break;
-      default:
-        break;
+  const handleLogout = async () => {
+    try {
+      await authAPI.logout();
+      logout();
+      toast.success('Logged out successfully');
+      navigate('/login');
+    } catch (error) {
+      logout();
+      navigate('/login');
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Header */}
       <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Welcome back, {user?.full_name}!
-              </h1>
-              <p className="text-gray-600 mt-1">
-                Manage your healthcare payments and appointments
-              </p>
+              <h1 className="text-2xl font-bold text-gray-900">💳 Payment System</h1>
+              <p className="text-sm text-gray-600">{user?.email}</p>
             </div>
             <button
-              onClick={() => setShowPaymentModal(true)}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              onClick={handleLogout}
+              className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
             >
-              <Plus className="h-4 w-4 mr-2" />
-              Quick Pay
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
             </button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <DollarSign className="h-6 w-6 text-green-400" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
-                      Total Paid
-                    </dt>
-                    <dd className="text-lg font-medium text-gray-900">
-                      ₹{stats?.totalAmountPaid || 0}
-                    </dd>
-                  </dl>
-                </div>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Payment Form */}
+        {!showQR && (
+          <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-6">Make a Payment</h2>
+            
+            {/* Payment Type Selection */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Select Payment Type
+              </label>
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  onClick={() => setPaymentType('Consultation Fees')}
+                  className={`p-4 border-2 rounded-lg text-center transition-all ${
+                    paymentType === 'Consultation Fees'
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-gray-200 hover:border-blue-300'
+                  }`}
+                >
+                  <div className="text-2xl mb-2">👨‍⚕️</div>
+                  <div className="font-semibold">Consultation Fees</div>
+                </button>
+                
+                <button
+                  onClick={() => setPaymentType('Lab')}
+                  className={`p-4 border-2 rounded-lg text-center transition-all ${
+                    paymentType === 'Lab'
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-gray-200 hover:border-blue-300'
+                  }`}
+                >
+                  <div className="text-2xl mb-2">🧪</div>
+                  <div className="font-semibold">Lab</div>
+                </button>
+                
+                <button
+                  onClick={() => setPaymentType('Medicine')}
+                  className={`p-4 border-2 rounded-lg text-center transition-all ${
+                    paymentType === 'Medicine'
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-gray-200 hover:border-blue-300'
+                  }`}
+                >
+                  <div className="text-2xl mb-2">💊</div>
+                  <div className="font-semibold">Medicine</div>
+                </button>
+                
+                <button
+                  onClick={() => setPaymentType('Scan')}
+                  className={`p-4 border-2 rounded-lg text-center transition-all ${
+                    paymentType === 'Scan'
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-gray-200 hover:border-blue-300'
+                  }`}
+                >
+                  <div className="text-2xl mb-2">🏥</div>
+                  <div className="font-semibold">Scan</div>
+                </button>
               </div>
             </div>
-          </div>
 
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <CreditCard className="h-6 w-6 text-blue-400" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
-                      Total Payments
-                    </dt>
-                    <dd className="text-lg font-medium text-gray-900">
-                      {stats?.totalPayments || 0}
-                    </dd>
-                  </dl>
-                </div>
+            {/* Amount Input */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Enter Amount (₹1 - ₹9999)
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-3 text-gray-500 text-lg">₹</span>
+                <input
+                  type="number"
+                  min="1"
+                  max="9999"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className="w-full pl-8 pr-4 py-3 text-lg border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Enter amount"
+                />
               </div>
+              <p className="mt-2 text-sm text-gray-500">Minimum: ₹1 | Maximum: ₹9,999</p>
             </div>
-          </div>
 
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <Activity className="h-6 w-6 text-yellow-400" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
-                      Pending Payments
-                    </dt>
-                    <dd className="text-lg font-medium text-gray-900">
-                      {stats?.pendingPayments || 0}
-                    </dd>
-                  </dl>
-                </div>
+            {/* Confirm Button */}
+            <button
+              onClick={handleGeneratePayment}
+              disabled={isLoading}
+              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold text-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+            >
+              {isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <CreditCard className="h-5 w-5 mr-2" />
+                  Confirm & Generate UPI
+                </>
+              )}
+            </button>
+          </div>
+        )}
+
+        {/* UPI QR Code Display */}
+        {showQR && (
+          <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+                <QrCode className="h-8 w-8 text-green-600" />
               </div>
-            </div>
-          </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Scan & Pay</h2>
+              <p className="text-gray-600 mb-6">
+                Pay ₹{amount} for {paymentType}
+              </p>
 
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <Calendar className="h-6 w-6 text-purple-400" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
-                      Upcoming Appointments
-                    </dt>
-                    <dd className="text-lg font-medium text-gray-900">
-                      {stats?.upcomingAppointments || 0}
-                    </dd>
-                  </dl>
-                </div>
+              {/* QR Code */}
+              <div className="bg-white p-4 rounded-lg border-2 border-gray-200 inline-block mb-6">
+                <img 
+                  src={qrCodeUrl} 
+                  alt="UPI QR Code" 
+                  className="w-64 h-64"
+                />
+                <p className="text-sm text-gray-600 mt-2">UPI ID: {UPI_ID}</p>
               </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Quick Actions */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {quickActions.map((action) => (
+              {/* UPI Link Button */}
+              <div className="mb-6">
+                <a
+                  href={upiLink}
+                  className="inline-block w-full bg-purple-600 text-white py-3 px-6 rounded-lg font-semibold text-lg hover:bg-purple-700 transition-colors"
+                >
+                  💳 Pay with UPI App
+                </a>
+                <p className="text-sm text-gray-500 mt-2">Click to open UPI app</p>
+              </div>
+
+              {/* Paid Button */}
               <button
-                key={action.id}
-                onClick={() => handleQuickAction(action)}
-                className={`p-4 rounded-lg border-2 transition-all duration-200 hover:shadow-md ${
-                  action.priority === 'high'
-                    ? 'border-red-200 bg-red-50 hover:border-red-300'
-                    : action.priority === 'medium'
-                    ? 'border-yellow-200 bg-yellow-50 hover:border-yellow-300'
-                    : 'border-gray-200 bg-white hover:border-gray-300'
-                }`}
+                onClick={handleMarkAsPaid}
+                className="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-semibold text-lg hover:bg-green-700 transition-colors flex items-center justify-center"
               >
-                <div className="flex items-center">
-                  <span className="text-2xl mr-3">{action.icon}</span>
-                  <div className="text-left">
-                    <h3 className="font-medium text-gray-900">{action.title}</h3>
-                    <p className="text-sm text-gray-600">{action.description}</p>
-                  </div>
-                </div>
+                <CheckCircle className="h-5 w-5 mr-2" />
+                I Have Paid
               </button>
-            ))}
-          </div>
-        </div>
 
-        {/* Payment Generation Modal */}
-        {showPaymentModal && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-              <div className="mt-3">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  Generate UPI Payment Link
-                </h3>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Amount (₹)
-                  </label>
-                  <input
-                    type="number"
-                    value={paymentAmount}
-                    onChange={(e) => setPaymentAmount(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter amount"
-                    min="1"
-                  />
-                </div>
-                <div className="flex justify-end space-x-3">
-                  <button
-                    onClick={() => setShowPaymentModal(false)}
-                    className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleGeneratePayment}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                  >
-                    Generate UPI Link
-                  </button>
-                </div>
-              </div>
+              <button
+                onClick={() => {
+                  setShowQR(false);
+                  setPaymentType('');
+                  setAmount('');
+                }}
+                className="mt-3 text-sm text-gray-600 hover:text-gray-800"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         )}
+
+        {/* Payment History */}
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">Payment History</h3>
+          
+          {payments.length === 0 ? (
+            <p className="text-gray-500 text-center py-4">No payments yet</p>
+          ) : (
+            <div className="space-y-3">
+              {payments.map((payment) => (
+                <div 
+                  key={payment.id} 
+                  className="flex justify-between items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
+                >
+                  <div>
+                    <p className="font-semibold text-gray-900">{payment.description}</p>
+                    <p className="text-sm text-gray-500">
+                      {new Date(payment.created_at).toLocaleDateString()} at{' '}
+                      {new Date(payment.created_at).toLocaleTimeString()}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-lg font-bold text-gray-900">₹{payment.amount}</p>
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      payment.status === 'completed' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {payment.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

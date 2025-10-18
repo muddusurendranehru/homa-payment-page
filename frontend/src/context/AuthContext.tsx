@@ -2,12 +2,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authAPI } from '../services/api';
 
 interface User {
-  id: number;
+  id: string;
   email: string;
-  full_name: string;
-  phone: string;
-  role: string;
-  is_verified: boolean;
   created_at: string;
 }
 
@@ -20,8 +16,7 @@ interface AuthContextType {
   register: (data: {
     email: string;
     password: string;
-    full_name: string;
-    phone: string;
+    confirmPassword: string;
   }) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
@@ -92,8 +87,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (data: {
     email: string;
     password: string;
-    full_name: string;
-    phone: string;
+    confirmPassword: string;
   }) => {
     try {
       const response = await authAPI.register(data);

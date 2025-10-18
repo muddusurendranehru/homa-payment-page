@@ -1,15 +1,14 @@
 const express = require('express');
 const { authenticateToken, requireRole } = require('../middleware/auth');
-const { User, Payment, Appointment, PaymentSession } = require('../models');
+const { User, Payment } = require('../models');
 
 const router = express.Router();
 
 // @route   GET /api/dashboard/stats
-// @desc    Get dashboard statistics for patient
-// @access  Private (Patient only)
+// @desc    Get dashboard statistics for user
+// @access  Private
 router.get('/stats', [
-    authenticateToken,
-    requireRole(['patient'])
+    authenticateToken
 ], async (req, res) => {
     try {
         const patient_id = req.user.id;
