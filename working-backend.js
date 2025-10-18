@@ -6,7 +6,8 @@ const jwt = require('jsonwebtoken');
 const { Sequelize } = require('sequelize');
 
 const app = express();
-const PORT = 3037;
+const PORT = process.env.PORT || 3037;
+const JWT_SECRET = process.env.JWT_SECRET || 'simple-secret-key-change-in-production';
 
 // Middleware
 app.use(cors());
@@ -98,7 +99,7 @@ app.post('/api/signup', async (req, res) => {
         });
         
         // Generate token
-        const token = jwt.sign({ userId: user.id }, 'simple-secret', { expiresIn: '24h' });
+        const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '24h' });
         
         res.json({ 
             success: true, 
@@ -131,7 +132,7 @@ app.post('/api/login', async (req, res) => {
         }
         
         // Generate token
-        const token = jwt.sign({ userId: user.id }, 'simple-secret', { expiresIn: '24h' });
+        const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '24h' });
         
         res.json({ 
             success: true, 
