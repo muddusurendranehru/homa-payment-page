@@ -1,4 +1,4 @@
-// 🚀 SIMPLE PAYMENT SYSTEM - WORKING VERSION
+// Simple working backend for payment system
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
@@ -6,16 +6,16 @@ const jwt = require('jsonwebtoken');
 const { Sequelize } = require('sequelize');
 
 const app = express();
-const PORT = process.env.PORT || 3037;
+const PORT = 3037;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
 // Database connection
-const sequelize = new Sequelize(process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_Bl9kug4wxKzN@ep-weathered-paper-a1mbh5zv-pooler.ap-southeast-1.aws.neon.tech/payment-system-clean?sslmode=require&channel_binding=require');
+const sequelize = new Sequelize('postgresql://neondb_owner:npg_Bl9kug4wxKzN@ep-weathered-paper-a1mbh5zv-pooler.ap-southeast-1.aws.neon.tech/payment-system-clean?sslmode=require&channel_binding=require');
 
-// Simple User model (matching existing database)
+// Simple User model
 const User = sequelize.define('User', {
     id: {
         type: Sequelize.UUID,
@@ -38,7 +38,7 @@ const User = sequelize.define('User', {
     updatedAt: 'updated_at'
 });
 
-// Simple Payment model (matching existing database)
+// Simple Payment model
 const Payment = sequelize.define('Payment', {
     id: {
         type: Sequelize.UUID,
@@ -60,6 +60,10 @@ const Payment = sequelize.define('Payment', {
     status: {
         type: Sequelize.STRING,
         defaultValue: 'pending'
+    },
+    transaction_id: {
+        type: Sequelize.STRING,
+        allowNull: true
     }
 }, {
     tableName: 'payments',
@@ -104,6 +108,7 @@ app.post('/api/signup', async (req, res) => {
         });
         
     } catch (error) {
+        console.error('Signup error:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
@@ -136,6 +141,7 @@ app.post('/api/login', async (req, res) => {
         });
         
     } catch (error) {
+        console.error('Login error:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
@@ -169,6 +175,7 @@ app.post('/api/payment', async (req, res) => {
         });
         
     } catch (error) {
+        console.error('Payment creation error:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
@@ -186,6 +193,7 @@ app.get('/api/payments/:userId', async (req, res) => {
         res.json({ success: true, payments });
         
     } catch (error) {
+        console.error('Get payments error:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
@@ -216,6 +224,7 @@ app.put('/api/payment/:paymentId/status', async (req, res) => {
         });
         
     } catch (error) {
+        console.error('Update status error:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
