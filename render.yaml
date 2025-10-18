@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: payment-backend
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node working-backend.js
+    envVars:
+      - key: DATABASE_URL
+        value: postgresql://neondb_owner:npg_Bl9kug4wxKzN@ep-weathered-paper-a1mbh5zv-pooler.ap-southeast-1.aws.neon.tech/payment-system-clean?sslmode=require&channel_binding=require
+      - key: PORT
+        value: 10000
+      - key: NODE_ENV
+        value: production
